@@ -8,18 +8,25 @@ import Element.Font as Font
 import Element.Input as Input
 import Html exposing (Html)
 
-channelPanel : List String -> Element msg
-channelPanel channels =
+channelPanel : List String -> String -> Element msg
+channelPanel channels activeChannel =
     column
         [ height fill
         , width <| fillPortion 1
         , Background.color <| rgb255 92 99 118
         , Font.color <| rgb255 255 255 255
         ]
-        <| List.map channelEl channels
+        <| List.map (channelElement activeChannel) channels
 
-channelEl : String -> Element msg
-channelEl channelName = el [ paddingXY 15 5, width fill ] <| text ("#" ++ channelName)
+channelElement : String -> String -> Element msg
+channelElement activeChannel channelName =
+    el (channelAttribut (activeChannel == channelName)) <| text ("#" ++ channelName)
+
+channelAttribut active =
+    if active then
+        [ Background.color <| rgb255 117 179 201, Font.bold ] ++ [ paddingXY 15 5, width fill ]
+    else
+        [ paddingXY 15 5, width fill ]
 
 chatPanel : Element msg
 chatPanel =
@@ -31,7 +38,7 @@ main : Html msg
 main =
     layout [] <|
         row [ height fill, width fill ]
-            [ channelPanel channelList
+            [ channelPanel channelList "general"
             , chatPanel
             ]
 
