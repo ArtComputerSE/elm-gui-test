@@ -9,6 +9,10 @@ import Element.Input as Input
 import Html exposing (Html)
 
 
+type alias Message =
+    { author : String, time : String, text : String }
+
+
 channelPanel : List String -> String -> Element msg
 channelPanel channels activeChannel =
     column
@@ -35,11 +39,11 @@ channelAttribute active =
         [ paddingXY 15 5, width fill ]
 
 
-chatPanel : String -> Element msg
-chatPanel activeChannel  =
+chatPanel : String -> List Message -> Element msg
+chatPanel activeChannel messageList =
     column [ height fill, width <| fillPortion 5 ]
         [ header activeChannel
-        , messagePanel
+        , messagePanel messageList
         , footer
         ]
 
@@ -65,8 +69,18 @@ header channel =
         ]
 
 
-messagePanel =
-    column [] []
+messagePanel : List Message -> Element msg
+messagePanel messageList =
+    column [ padding 10, spacingXY 0 20, scrollbarY ] <| List.map messageEntry messages
+
+
+messageEntry : Message -> Element msg
+messageEntry message =
+    column [ width fill, spacingXY 0 5 ]
+        [ row [ spacingXY 10 0 ]
+            [ el [ Font.bold ] <| text message.author, text message.time ]
+        , paragraph [] [ text message.text ]
+        ]
 
 
 footer =
@@ -98,7 +112,7 @@ main =
     layout [] <|
         row [ height fill, width fill ]
             [ channelPanel channelList "general"
-            , chatPanel "general"
+            , chatPanel "general" messages
             ]
 
 
@@ -107,5 +121,12 @@ channelList =
     [ "extra"
     , "general"
     , "random"
-    , "commoditites"
+    , "commodities"
+    ]
+
+
+messages : List Message
+messages =
+    [ Message "Lovecraft" "1928-05-13" "Return from the crypt."
+    , Message "Shakespear" "1612-01-14" "Much ado about nothing."
     ]
