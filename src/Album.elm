@@ -58,12 +58,11 @@ update msg model =
                     ( { model | uploading = 0 }
                     , Http.request
                         { method = "POST"
-                        , url = "http://localhost:5000/albums/store"
+                        , url = "http://localhost:5000/photos/store/" ++ "b794eee4-11d8-4c86-a6dc-002949d1e8b7"
                         , headers = []
                         , body =
                             Http.multipartBody
-                                [ Http.stringPart "filename" (File.name file)
-                                , Http.filePart "file" file
+                                [ Http.filePart "file" file
                                 ]
                         , expect = Http.expectWhatever Uploaded
                         , timeout = Nothing
