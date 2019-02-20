@@ -1,8 +1,9 @@
 module RotatePhoto exposing (Message(..), main)
 
 import AllColors exposing (themeColor1)
-import Element exposing (Attribute, Element, centerX, column, fill, height, image, layout, moveDown, paddingXY, px, rotate, row, shrink, spacingXY, text, width)
+import Element exposing (Attribute, Element, alignBottom, alignTop, centerX, centerY, column, el, fill, height, image, layout, moveDown, paddingXY, px, rotate, row, shrink, spacingXY, text, width)
 import Element.Border as Border
+import Element.Input as Input
 import Html exposing (Html)
 
 
@@ -20,13 +21,13 @@ main =
                     ]
                 ]
             , row
-                [ height (px 310)
+                [ height (px 350)
                 , Border.width 1
                 , Border.color themeColor1
                 ]
                 images
             , row
-                [ height (px 310)
+                [ height (px 400)
                 , Border.width 1
                 , Border.color themeColor1
                 ]
@@ -40,15 +41,36 @@ images =
     , anImage portraitOk 0 225 300
     , anImage portraitNotOk 270 225 300
     , anImage onTheCouch 90 225 300
+    , anImage onTheCouch 90 225 300
     ]
 
 
 anImage url rotation w h =
-    column [ width (px 300), height (px 300) ]
-        [ image
-            (imageSize (w > h) rotation)
-            { src = url
-            , description = ""
+    column
+        [ width (px 300)
+        , height (px 300)
+        , alignTop
+        ]
+        [ buttonRow
+        , row []
+            [ image
+                (imageSize (w > h) rotation)
+                { src = url
+                , description = ""
+                }
+            ]
+        ]
+
+
+buttonRow =
+    row [ centerX, centerY, alignTop ]
+        [ Input.button
+            [ Border.width 1
+            , Border.rounded 5
+            , paddingXY 5 5
+            ]
+            { onPress = Just NoOp
+            , label = el [] <| text "Edit"
             }
         ]
 
@@ -60,13 +82,13 @@ imageSize landscape rotation =
             [ height (px 225), width (px 300) ]
 
         else
-            [ height (px 300), width (px 225), rotate (Basics.degrees (toFloat rotation)), moveDown 38 ]
+            [ height (px 300), width (px 225), rotate (Basics.degrees (toFloat rotation)), moveDown 10 ]
 
     else if rotation == 0 then
         [ height (px 300), width (px 225) ]
 
     else
-        [ height (px 225), width (px 300), rotate (Basics.degrees (toFloat rotation)), moveDown 38 ]
+        [ height (px 225), width (px 300), rotate (Basics.degrees (toFloat rotation)), moveDown 10 ]
 
 
 portraitOk =
