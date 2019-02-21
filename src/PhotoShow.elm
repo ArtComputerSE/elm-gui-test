@@ -34,7 +34,7 @@ import Html exposing (Html)
 
 
 type Message
-    = NoOp
+    = NoOp Photo
 
 
 type alias Photo =
@@ -60,23 +60,58 @@ photosData =
     [ Photo 375 500 portrait
     , Photo 500 375 landscape
     , Photo 375 500 portrait
-    , Photo 500 375 landscape
+    , Photo 375 500 portrait
     , Photo 500 375 landscape
     ]
 
 
+photoEdit : List Photo -> Element Message
+photoEdit photos =
+    column
+        [ spacingXY 10 10
+        , width fill
+        ]
+    <|
+        List.map photoEditRow <|
+            chunkList4 photos (Photo 375 500 empty)
+
+
 photoShow : List Photo -> Element Message
 photoShow photos =
-    column [ spacingXY 10 10 ] <| List.map showPhotoRow <| chunkList4 photos (Photo 375 500 empty)
+    column
+        [ spacingXY 10 10
+        , width fill
+        ]
+    <|
+        List.map photoShowRow <|
+            chunkList4 photos (Photo 375 500 empty)
 
 
-showPhotoRow : List Photo -> Element Message
-showPhotoRow list4 =
-    row [] <| List.map showPhoto list4
+photoEditRow : List Photo -> Element Message
+photoEditRow list4 =
+    row [] <| List.map photoEditPhoto list4
 
 
-showPhoto : Photo -> Element Message
-showPhoto photo =
+photoShowRow : List Photo -> Element Message
+photoShowRow list4 =
+    row [] <| List.map photoShowPhoto list4
+
+
+photoShowPhoto : Photo -> Element Message
+photoShowPhoto photo =
+    image
+        [ width (fill |> maximum photo.width)
+        , height (fill |> maximum photo.height)
+        , Border.width 5
+        , Border.rounded 5
+        ]
+        { src = photo.url
+        , description = "photo shown here"
+        }
+
+
+photoEditPhoto : Photo -> Element Message
+photoEditPhoto photo =
     column
         [ width fill
         , height fill
@@ -95,20 +130,12 @@ showPhoto photo =
                 , paddingXY 10 3
                 , centerX
                 ]
-                { onPress = Just NoOp
+                { onPress = Just (NoOp photo)
                 , label = el [] <| text "X"
                 }
             ]
         , row []
-            [ image
-                [ width (fill |> maximum photo.width)
-                , height (fill |> maximum photo.height)
-                , Border.width 5
-                , Border.rounded 5
-                ]
-                { src = photo.url
-                , description = "photo shown here"
-                }
+            [ photoShowPhoto photo
             ]
         , row
             [ width fill
@@ -123,7 +150,7 @@ showPhoto photo =
                 , Border.rounded 5
                 , alignLeft
                 ]
-                { onPress = Just NoOp
+                { onPress = Just (NoOp photo)
                 , label = el [] <| text "<="
                 }
             , Input.button
@@ -133,7 +160,7 @@ showPhoto photo =
                 , Border.rounded 5
                 , alignRight
                 ]
-                { onPress = Just NoOp
+                { onPress = Just (NoOp photo)
                 , label = el [] <| text "=>"
                 }
             ]
@@ -164,5 +191,8 @@ main =
     layout [ height fill ] <|
         column
             [ width fill
+            , spacingXY 0 30
             ]
-            [ photoShow photosData ]
+            [ photoEdit photosData
+            , photoShow photosData
+            ]
