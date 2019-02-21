@@ -5,7 +5,9 @@ module PhotoShow exposing (Message(..), main)
    them?
 -}
 
+import AllColors exposing (themeColor0, themeColor1, themeColor2)
 import Element exposing (Element, alignBottom, alignLeft, alignRight, alignTop, centerX, column, el, fill, height, image, layout, maximum, none, paddingEach, paddingXY, row, shrink, spacingXY, text, width)
+import Element.Background as Background
 import Element.Border as Border
 import Element.Input as Input
 import Html exposing (Html)
@@ -67,12 +69,12 @@ photoShow photos =
 
 photoEditRow : List Photo -> Element Message
 photoEditRow list4 =
-    row [] <| List.map photoEditPhoto list4
+    row [ spacingXY 5 0, paddingXY 5 0 ] <| List.map photoEditPhoto list4
 
 
 photoShowRow : List Photo -> Element Message
 photoShowRow list4 =
-    row [] <| List.map photoShowPhoto list4
+    row [ spacingXY 5 0, paddingXY 5 0 ] <| List.map photoShowPhoto list4
 
 
 photoShowPhoto : Photo -> Element Message
@@ -82,6 +84,8 @@ photoShowPhoto photo =
         , height (fill |> maximum photo.height)
         , Border.width 5
         , Border.rounded 5
+        , Border.color themeColor2
+        , Border.glow themeColor1 1
         ]
         { src = photo.url
         , description = "photo shown here"
@@ -96,65 +100,98 @@ photoEditPhoto photo =
         , Border.widthEach { top = 1, bottom = 1, left = 1, right = 1 }
         , Border.rounded 5
         ]
-        [ row
-            [ width fill
-            , alignTop
-            , paddingEach { top = 5, bottom = 1, left = 5, right = 5 }
-            ]
-            [ if photo.url == empty then
-                none
-
-              else
-                Input.button
-                    [ width shrink
-                    , Border.width 1
-                    , Border.rounded 5
-                    , paddingXY 10 3
-                    , centerX
-                    ]
-                    { onPress = Just (NoOp photo)
-                    , label = el [] <| text "X"
-                    }
-            ]
-        , row []
-            [ photoShowPhoto photo
-            ]
-        , row
-            [ width fill
-            , alignBottom
-            , Border.widthEach { top = 0, bottom = 0, left = 0, right = 0 }
-            , paddingEach { top = 1, bottom = 5, left = 5, right = 5 }
-            ]
-            [ if photo.url == empty then
-                none
-
-              else
-                Input.button
-                    [ width shrink
-                    , Border.width 1
-                    , paddingXY 3 3
-                    , Border.rounded 5
-                    , alignLeft
-                    ]
-                    { onPress = Just (NoOp photo)
-                    , label = el [] <| text "<="
-                    }
-            , if photo.url == empty then
-                none
-
-              else
-                Input.button
-                    [ width shrink
-                    , Border.width 1
-                    , paddingXY 3 3
-                    , Border.rounded 5
-                    , alignRight
-                    ]
-                    { onPress = Just (NoOp photo)
-                    , label = el [] <| text "=>"
-                    }
-            ]
+        [ topControl photo (photo.url == empty)
+        , photoShowPhoto photo
+        , bottomControls photo (photo.url == empty)
         ]
+
+
+topControl : Photo -> Bool -> Element Message
+topControl photo showControl =
+    row
+        [ width fill
+        , alignTop
+        , paddingEach { top = 5, bottom = 1, left = 5, right = 5 }
+        , Border.color themeColor2
+        , Border.glow themeColor1 1
+        ]
+        [ if showControl then
+            none
+
+          else
+            deleteButton photo
+        ]
+
+
+bottomControls : Photo -> Bool -> Element Message
+bottomControls photo showControls =
+    row
+        [ width fill
+        , alignBottom
+        , Border.widthEach { top = 0, bottom = 0, left = 0, right = 0 }
+        , paddingEach { top = 1, bottom = 5, left = 5, right = 5 }
+        , Border.color themeColor2
+        , Border.glow themeColor1 1
+        ]
+        [ if showControls then
+            none
+
+          else
+            leftButton photo
+        , if showControls then
+            none
+
+          else
+            rightButton photo
+        ]
+
+
+deleteButton : Photo -> Element Message
+deleteButton photo =
+    Input.button
+        [ width shrink
+        , Border.width 1
+        , Border.rounded 5
+        , paddingXY 10 3
+        , centerX
+        , Border.color themeColor2
+        , Border.glow themeColor1 1
+        ]
+        { onPress = Just (NoOp photo)
+        , label = el [] <| text "X"
+        }
+
+
+leftButton : Photo -> Element Message
+leftButton photo =
+    Input.button
+        [ width shrink
+        , Border.width 1
+        , paddingXY 3 3
+        , Border.rounded 5
+        , alignLeft
+        , Border.color themeColor2
+        , Border.glow themeColor1 1
+        ]
+        { onPress = Just (NoOp photo)
+        , label = el [] <| text "<="
+        }
+
+
+rightButton : Photo -> Element Message
+rightButton photo =
+    Input.button
+        [ width shrink
+        , Border.width 1
+        , paddingXY 3 3
+        , Border.rounded 5
+        , alignRight
+        , Border.color themeColor2
+        , Border.glow themeColor1 1
+        ]
+        { onPress = Just (NoOp photo)
+        , label = el [] <| text "=>"
+        }
 
 
 chunkList4 : List a -> a -> List (List a)
@@ -182,6 +219,7 @@ main =
         column
             [ width fill
             , spacingXY 0 30
+            , Background.color themeColor0
             ]
             [ photoEdit photosData
             , photoShow photosData
