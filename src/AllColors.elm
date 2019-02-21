@@ -5,17 +5,21 @@ import Element exposing (Color, rgba)
 
 themeColor0 : Color
 themeColor0 =
-    white
+    rgba (246 / 255) (208 / 255) (242 / 255) 1.0
+
+
+
+-- lightPurple
 
 
 themeColor1 : Color
 themeColor1 =
-    green
+    purple
 
 
 themeColor2 : Color
 themeColor2 =
-    darkGreen
+    darkPurple
 
 
 
