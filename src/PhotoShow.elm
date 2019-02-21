@@ -5,29 +5,7 @@ module PhotoShow exposing (Message(..), main)
    them?
 -}
 
-import Element
-    exposing
-        ( Element
-        , alignBottom
-        , alignLeft
-        , alignRight
-        , alignTop
-        , centerX
-        , column
-        , el
-        , fill
-        , height
-        , image
-        , layout
-        , maximum
-        , paddingEach
-        , paddingXY
-        , row
-        , shrink
-        , spacingXY
-        , text
-        , width
-        )
+import Element exposing (Element, alignBottom, alignLeft, alignRight, alignTop, centerX, column, el, fill, height, image, layout, maximum, none, paddingEach, paddingXY, row, shrink, spacingXY, text, width)
 import Element.Border as Border
 import Element.Input as Input
 import Html exposing (Html)
@@ -123,16 +101,20 @@ photoEditPhoto photo =
             , alignTop
             , paddingEach { top = 5, bottom = 1, left = 5, right = 5 }
             ]
-            [ Input.button
-                [ width shrink
-                , Border.width 1
-                , Border.rounded 5
-                , paddingXY 10 3
-                , centerX
-                ]
-                { onPress = Just (NoOp photo)
-                , label = el [] <| text "X"
-                }
+            [ if photo.url == empty then
+                none
+
+              else
+                Input.button
+                    [ width shrink
+                    , Border.width 1
+                    , Border.rounded 5
+                    , paddingXY 10 3
+                    , centerX
+                    ]
+                    { onPress = Just (NoOp photo)
+                    , label = el [] <| text "X"
+                    }
             ]
         , row []
             [ photoShowPhoto photo
@@ -143,26 +125,34 @@ photoEditPhoto photo =
             , Border.widthEach { top = 0, bottom = 0, left = 0, right = 0 }
             , paddingEach { top = 1, bottom = 5, left = 5, right = 5 }
             ]
-            [ Input.button
-                [ width shrink
-                , Border.width 1
-                , paddingXY 3 3
-                , Border.rounded 5
-                , alignLeft
-                ]
-                { onPress = Just (NoOp photo)
-                , label = el [] <| text "<="
-                }
-            , Input.button
-                [ width shrink
-                , Border.width 1
-                , paddingXY 3 3
-                , Border.rounded 5
-                , alignRight
-                ]
-                { onPress = Just (NoOp photo)
-                , label = el [] <| text "=>"
-                }
+            [ if photo.url == empty then
+                none
+
+              else
+                Input.button
+                    [ width shrink
+                    , Border.width 1
+                    , paddingXY 3 3
+                    , Border.rounded 5
+                    , alignLeft
+                    ]
+                    { onPress = Just (NoOp photo)
+                    , label = el [] <| text "<="
+                    }
+            , if photo.url == empty then
+                none
+
+              else
+                Input.button
+                    [ width shrink
+                    , Border.width 1
+                    , paddingXY 3 3
+                    , Border.rounded 5
+                    , alignRight
+                    ]
+                    { onPress = Just (NoOp photo)
+                    , label = el [] <| text "=>"
+                    }
             ]
         ]
 
