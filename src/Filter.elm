@@ -2,7 +2,7 @@ module Places exposing (Model, Msg(..), main)
 
 import AllColors exposing (themeColor0, themeColor1)
 import Browser
-import Element exposing (Attribute, Element, alignRight, centerX, centerY, clip, column, el, fill, height, inFront, layout, maximum, moveLeft, moveUp, none, paddingXY, px, row, spacingXY, text, width, wrappedRow)
+import Element exposing (Attribute, Element, alignRight, centerX, centerY, clip, column, el, fill, height, inFront, layout, maximum, moveLeft, moveUp, none, paddingXY, px, row, spaceEvenly, spacingXY, text, width, wrappedRow)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Events
@@ -25,24 +25,46 @@ type PersonOrientation
     | SecretOrientation
 
 
+type Person1Or2
+    = Person1
+    | Person2
+
+
+type alias PersonSelections =
+    { owner : Person1Or2
+    , sexSelections : List PersonSex
+    , orientationSelections : List PersonOrientation
+    , minAge : Int
+    , maxAge : Int
+    }
+
+
+defaultPersonSelections : Person1Or2 -> PersonSelections
+defaultPersonSelections p12 =
+    { owner = p12
+    , sexSelections = []
+    , orientationSelections = []
+    , minAge = 18
+    , maxAge = 99
+    }
+
+
 type Msg
     = AddButtonPressed
     | DoneSelecting
-    | ToggleCouples Bool
-    | ToggleSex PersonSex
-    | ToggleOrientation PersonOrientation
     | TogglePlace String
-    | UpdateMinAge String
-    | UpdateMaxAge String
+    | ToggleCouples Bool
+    | ToggleSex Person1Or2 PersonSex
+    | ToggleOrientation Person1Or2 PersonOrientation
+    | UpdateMinAge Person1Or2 String
+    | UpdateMaxAge Person1Or2 String
     | NoOp Bool
 
 
 type alias Model =
     { couples : Bool
-    , sexSelections : List ( PersonSex, Bool )
-    , orientationSelections : List ( PersonOrientation, Bool )
-    , minAge : Int
-    , maxAge : Int
+    , person1Selection : PersonSelections
+    , person2Selection : PersonSelections
     , places : List String
     , showPlacesSelection : Bool
     }
@@ -51,41 +73,11 @@ type alias Model =
 init : Model
 init =
     { couples = False
-    , sexSelections = [ ( Male, False ), ( Female, False ), ( Trans, False ), ( SecretSex, False ) ]
-    , orientationSelections = [ ( Hetero, False ), ( Bi, False ), ( Homo, False ), ( SecretOrientation, False ) ]
-    , minAge = 18
-    , maxAge = 99
+    , person1Selection = defaultPersonSelections Person1
+    , person2Selection = defaultPersonSelections Person2
     , places = []
     , showPlacesSelection = False
     }
-
-
-listGet : k -> List ( k, v ) -> v -> v
-listGet key list default =
-    case list of
-        [] ->
-            default
-
-        ( k, v ) :: tail ->
-            if k == key then
-                v
-
-            else
-                listGet key tail default
-
-
-listPut : k -> v -> List ( k, v ) -> List ( k, v )
-listPut key value list =
-    case list of
-        [] ->
-            [ ( key, value ) ]
-
-        ( k, v ) :: tail ->
-            if k == key then
-                ( key, value ) :: tail
-
-            else
-                ( k, v ) :: listPut key value tail
 
 
 update : Msg -> Model -> Model
@@ -100,33 +92,37 @@ update msg model =
         ToggleCouples _ ->
             { model | couples = not model.couples }
 
-        ToggleSex sex ->
-            let
-                newValue =
-                    not (listGet sex model.sexSelections False)
-            in
-            { model | sexSelections = listPut sex newValue model.sexSelections }
+        ToggleSex p12 sex ->
+            case p12 of
+                Person1 ->
+                    { model | person1Selection = newSexSelection model.person1Selection sex }
 
-        ToggleOrientation orientation ->
-            let
-                newValue =
-                    not (listGet orientation model.orientationSelections False)
-            in
-            { model | orientationSelections = listPut orientation newValue model.orientationSelections }
+                Person2 ->
+                    { model | person2Selection = newSexSelection model.person2Selection sex }
 
-        UpdateMinAge n ->
-            let
-                newValue =
-                    Maybe.withDefault model.minAge <| String.toInt n
-            in
-            { model | minAge = newValue }
+        ToggleOrientation p12 orientation ->
+            case p12 of
+                Person1 ->
+                    { model | person1Selection = newOrientationSelection model.person1Selection orientation }
 
-        UpdateMaxAge n ->
-            let
-                newValue =
-                    Maybe.withDefault model.maxAge <| String.toInt n
-            in
-            { model | maxAge = newValue }
+                Person2 ->
+                    { model | person2Selection = newOrientationSelection model.person2Selection orientation }
+
+        UpdateMinAge p12 n ->
+            case p12 of
+                Person1 ->
+                    { model | person1Selection = newMinAge model.person1Selection n }
+
+                Person2 ->
+                    { model | person2Selection = newMinAge model.person2Selection n }
+
+        UpdateMaxAge p12 n ->
+            case p12 of
+                Person1 ->
+                    { model | person1Selection = newMaxAge model.person1Selection n }
+
+                Person2 ->
+                    { model | person2Selection = newMaxAge model.person2Selection n }
 
         TogglePlace place ->
             let
@@ -143,6 +139,57 @@ update msg model =
             model
 
 
+newSexSelection personSelections sex =
+    let
+        newList =
+            if List.member sex personSelections.sexSelections then
+                List.filter (\s -> s /= sex) personSelections.sexSelections
+
+            else
+                sex :: personSelections.sexSelections
+    in
+    { personSelections | sexSelections = newList }
+
+
+newOrientationSelection personSelections orientation =
+    let
+        newList =
+            if List.member orientation personSelections.orientationSelections then
+                List.filter (\s -> s /= orientation) personSelections.orientationSelections
+
+            else
+                orientation :: personSelections.orientationSelections
+    in
+    { personSelections | orientationSelections = newList }
+
+
+newMinAge personSelections n =
+    let
+        newAge =
+            toIntOrZero n personSelections.minAge
+    in
+    { personSelections | minAge = newAge }
+
+
+newMaxAge personSelections n =
+    let
+        newAge =
+            toIntOrZero n personSelections.maxAge
+    in
+    { personSelections | maxAge = newAge }
+
+
+toIntOrZero n default =
+    Maybe.withDefault default <|
+        String.toInt
+            (if String.length n > 0 then
+                n
+
+             else
+                "0"
+            )
+
+
 view : Model -> Html Msg
 view model =
     layout [ height fill ] <|
@@ -151,6 +198,7 @@ view model =
             , centerX
             , paddingXY 30 30
             , Background.color themeColor0
+            , Font.size 16
             ]
             [ viewFilterControl model ]
 
@@ -160,36 +208,30 @@ viewFilterControl model =
     row
         [ width fill
         , Background.color themeColor0
+        , spaceEvenly
         ]
-        [ column []
+        [ column [ width fill, Border.width 1 ]
             [ couplesSelector model
-            , wrappedRow []
-                [ person1 model
-                , person2 model
+            , wrappedRow [ width fill ]
+                [ person model.person1Selection
+                , if model.couples then
+                    person model.person2Selection
+
+                  else
+                    none
                 ]
             ]
         , viewPlacesControl model
         ]
 
 
-person1 model =
+person : PersonSelections -> Element Msg
+person personSelections =
     column [ width fill ]
-        [ sexSelector model
-        , orientationSelector model
-        , ageRange model
+        [ sexSelector personSelections.owner personSelections
+        , orientationSelector personSelections.owner personSelections
+        , ageRange personSelections.owner personSelections.minAge personSelections.maxAge
         ]
-
-
-person2 model =
-    if model.couples then
-        column [ width fill ]
-            [ sexSelector model
-            , orientationSelector model
-            , ageRange model
-            ]
-
-    else
-        none
 
 
 couplesSelector : Model -> Element Msg
@@ -208,14 +250,16 @@ couplesSelector model =
             }
 
 
-sexSelector model =
+sexSelector : Person1Or2 -> PersonSelections -> Element Msg
+sexSelector p12 personSelections =
     row [ Border.width 1 ]
-        (List.map sexChecker model.sexSelections)
+        (List.map (sexChecker p12 personSelections.sexSelections) [ Male, Female, Trans, SecretSex ])
 
 
-sexChecker ( sex, selected ) =
+sexChecker : Person1Or2 -> List PersonSex -> PersonSex -> Element Msg
+sexChecker p12 selections sex =
     el
-        [ Element.Events.onClick (ToggleSex sex)
+        [ Element.Events.onClick (ToggleSex p12 sex)
         , paddingXY 10 10
         , width (px 100)
         ]
@@ -224,7 +268,7 @@ sexChecker ( sex, selected ) =
             { onChange = NoOp
             , icon = Input.defaultCheckbox
             , label = Input.labelRight [] (text (sexToString sex))
-            , checked = selected
+            , checked = List.member sex selections
             }
 
 
@@ -244,14 +288,15 @@ sexToString sex =
             "Hemligt"
 
 
-orientationSelector model =
+orientationSelector : Person1Or2 -> PersonSelections -> Element Msg
+orientationSelector p12 personSelections =
     row [ Border.width 1 ]
-        (List.map orientationChecker model.orientationSelections)
+        (List.map (orientationChecker p12 personSelections.orientationSelections) [ Hetero, Bi, Homo, SecretOrientation ])
 
 
-orientationChecker ( orientation, selected ) =
+orientationChecker p12 selections orientation =
     el
-        [ Element.Events.onClick (ToggleOrientation orientation)
+        [ Element.Events.onClick (ToggleOrientation p12 orientation)
         , paddingXY 10 10
         , width (px 100)
         ]
@@ -260,7 +305,7 @@ orientationChecker ( orientation, selected ) =
             { onChange = NoOp
             , icon = Input.defaultCheckbox
             , label = Input.labelRight [] (text (orientationToString orientation))
-            , checked = selected
+            , checked = List.member orientation selections
             }
 
 
@@ -280,18 +325,19 @@ orientationToString orientation =
             "Hemlig"
 
 
-ageRange model =
-    row []
+ageRange : Person1Or2 -> Int -> Int -> Element Msg
+ageRange p12 currentMin currentMax =
+    row [ width fill ]
         [ el [] <| text "Ålder: "
-        , Input.text [ width (px 50) ]
-            { onChange = UpdateMinAge
-            , text = String.fromInt model.minAge
+        , Input.text [ width (px 70) ]
+            { onChange = UpdateMinAge p12
+            , text = String.fromInt currentMin
             , placeholder = Nothing
             , label = Input.labelLeft [ centerY ] <| text "Min"
             }
-        , Input.text [ width (px 50) ]
-            { onChange = UpdateMaxAge
-            , text = String.fromInt model.maxAge
+        , Input.text [ width (px 70) ]
+            { onChange = UpdateMaxAge p12
+            , text = String.fromInt currentMax
             , placeholder = Nothing
             , label = Input.labelLeft [ centerY ] <| text "Max"
             }
@@ -379,7 +425,7 @@ selectionDialog selectedPlaces =
             , moveUp 5
             , moveLeft 5
             , paddingXY 3 3
-            , Font.size 12
+            , Font.size 16
             , Border.rounded 3
             , width (fill |> maximum 700)
             ]
